@@ -1,7 +1,32 @@
 # soda
+## Contents
++ [Quickstart](#quickstart)
+    + [Requirements](#requirements)
+    + [Basics](#basics)
+    + [Building a GIF](#building-a-gif)
+    + [Positioning](#positioning)
++ [Basic Reference](#basic-reference)
+    + [Objects system](#objects-system)
+    + [Canvas](#canvas)
+    + [Shape](#shape)
+    + [Color](#color)
+    + [Dot](#dot)
+    + [Template](#template)
++ [Built-in Shapes](#built-in-shapes)
+    + [Polygon](#polygon)
+        + [Rectangle](#rectangle)
+    + [Ellipse](#ellipse)
+        + [Pieslice](#pieslice)
+    + [Text](#text)
+    + [MaskShape](#maskshape)
+    + [FitBox](#fitbox)
+    + [SodaImage](#sodaimage)
+
 ## Quickstart
+
 ### Requirements
 Soda runs on Python3, using `Pillow` for rendering and `imageio` for GIFs (optional)
+
 ### Basics
 The main object of Soda environment is canvas, an object that contains shapes and renders to an image:
 ```python
@@ -26,8 +51,9 @@ The answer is simplicity. You don't have to handle some unnecessary aspects of a
 
 Despite the fact that Soda is intended for creating images, its main feature is dynamics. 
 So, let's make a better example with GIF animation:
-### Creating a GIF
-Imagine that you want to make an animation of 1600 squares randomly changing color. Pretty strange example, but here you are:
+
+### Building a GIF
+Imagine that you want to make an animation of 1600 squares randomly changing color. Pretty strange example, but here you are:    
 ```python
 import soda
 multiplier = 5
@@ -52,7 +78,7 @@ soda.build_gif(renders, framerate=30)
 ```
 ### Positioning
 You've probably seen some `position` argument before on this page. Seems intuitive, but what does this argument do in Rectangle?    
-Soda has levels of position: You can put an ellipse on canvas on (200, 200), and then set the position of this ellipse itself to (120, 90). The final position would be (320, 290)
+Soda has levels of position: You can put an ellipse on canvas on (200, 200), and then set the position of this ellipse itself to (120, 90). The final position would be (320, 290)    
 
 ____
 
@@ -64,6 +90,7 @@ There are 4 main object types:
 + Shape
 + Dot
 + Color
++ Template
 
 ____
 
@@ -80,7 +107,7 @@ Puts a shape to the canvas. If index is specified, would insert the shape on tha
 *returns: None*     
 
 `pop(index)`    
-Removes a shape with chosen index.
+Removes a shape with chosen index.    
 *returns: removed Shape*    
 
 `move(index, position)`    
@@ -101,10 +128,8 @@ Saves an image of the canvas, equivalent to `.render().save(file, extension)`
 ____
 
 ### Shape
-Shape is a base class for different objects that can be put on the canvas.    
-More detailed reference of all built-in shapes would come soon.    
-
-#### Methods
+This is the default Shape reference, for built-in shapes check [Built-in Shapes](#built-in-shapes)    
+#### Methods    
 Shapes have to implement a few common methods:    
 
 `render(draw, position)`    
@@ -121,11 +146,11 @@ Returns a tuple with shape size in pixels: (width, height).
 
 Next block contains methods fully-implemented in Shape class:
 
-`color_set(color)`
+`color_set(color)`    
 Sets a color of the shape. `color` can be either a Color object or any type of color notation the [Color.parse](#parse-method) accepts    
-*returns: None*
+*returns: None*    
 
-`color_get()`
+`color_get()`    
 Returns a color of the shape    
 *returns: Color*    
 
@@ -134,7 +159,7 @@ ____
 ### Color
 Defines color.    
 
-#### Attributes
+#### Attributes    
 
 `change(color)`    
 Changes its color to specified    
@@ -157,12 +182,71 @@ Accepts:
 
 *returns: rgb(a) tuple*    
 
-### Dot
-Defines an abstract dot on any canvas
+____
 
-#### Arguments
-`x, y` - dot position
+### Dot    
+Defines an abstract dot on any canvas   
+*dot-like object* is a tuple or list of 2 integers, or the Dot itself
 
-#### Methods
-`move(x=None, y=None)`
-Moves a dot to another position. If some parameter isn't specified, it would stay the same.
+#### Arguments    
+`x, y` - dot position    
+
+#### Methods    
+`move(x=None, y=None)`    
+Moves a dot to another position. If some parameter isn't specified, it would stay the same.    
+
+____
+
+### Template    
+Defines a template to create similiar shapes    
+
+#### Arguments    
+`o_class`  desired object class, i.e. Ellipse    
+`arg_names`  tuple/list containing names of arguments as they would be passed    
+`**params`  static default params passed to the shape constructor    
+
+#### Methods    
+`create(*args, **params)`    
+Creates a shape with specified args, default params and passed params.    
+Priority of arguments (from high to low): params - default params - args    
+*returns: shape instance*    
+
+____
+
+## Built-in Shapes
+Soda has 6 types of unique built-in shapes.    
+
+### Polygon    
+The most used shape is definitely a polygon.    
+
+Polygon constructor takes two arguments:    
++ `dots` - tuple/list of dot-like objects    
++ `color` - see [Color notation](#parse-method). *default: "black"*    
+
+Polygon shares default Shape methods and defines a `to_list()` method (*returns: list of dots*)    
+
+#### Rectangle    
+Rectangle is a wrapper class of Polygon.    
+
+Rectangle constructor takes four arguments:    
++ `width` - width of the rectangle in pixels    
++ `height` - height in pixels *default: passed width*    
++ `color` - see [Color notation](#parse-method). *default: "black"*    
++ `position` - dot-like object    
+
+Rectangle has unique `set_size(width, height=None)` method, that changes its size (*returns: None*)    
+
+____
+This part is still not documented. You might wait a few days.
+
+### Ellipse
+
+#### Pieslice
+
+### Text
+
+### MaskShape
+
+### FitBox
+
+### SodaImage
