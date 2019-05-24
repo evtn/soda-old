@@ -101,6 +101,7 @@ class Shape:
         return self.__class__()
 
 
+# dots[, color]
 class Polygon(Shape):
     def __init__(self, dots, color=(0, 0, 0, 255)):
         self.color_set(color)
@@ -128,10 +129,11 @@ class Polygon(Shape):
         return Polygon(dots, self.color)
 
 
+# center, x_radius[, y_radius, color]
 class Ellipse(Shape):
     def __init__(self, center, x_radius, y_radius=None, color=(0, 0, 0, 255)):
         self.radius_set(x_radius, y_radius)
-        self.center = Dot(*center) if not isinstance(center, Dot) else center
+        self.center = get_dot(center)
         self.color_set(color)
 
     def to_list(self, pos):
@@ -164,6 +166,7 @@ class Ellipse(Shape):
         return self.__class__(new_center, new_x, new_y, self.color, **params)
 
 
+# center, x_radius[, y_radius, color, start, stop]
 class Pieslice(Ellipse):
     def __init__(self, center, xrad, yrad=None, color=(0, 0, 0, 255), start=0, stop=360):
         super().__init__(center, xrad, yrad, color)
@@ -186,6 +189,7 @@ class Pieslice(Ellipse):
         return super().resized(k, start=-self.start, stop=-self.stop)
 
 
+# text, font, size[, position, align, color]
 class Text(Shape):
     def __init__(self, text, font, size, position=Dot(0, 0), align="cs", color=(0, 0, 0, 255)):
         self.text = text
@@ -198,7 +202,7 @@ class Text(Shape):
         self.font = ImageFont.truetype(path, size)
         self.font_ = [path, size]
 
-    def change_size(self, size):
+    def set_size(self, size):
         self.set_font(self.font_[0], size)
 
     def render(self, draw, position):
@@ -228,6 +232,7 @@ class Text(Shape):
         return Text(self.text, self.font_[0], int(self.font_[1] * k), self.position, self.align, self.color)
 
 
+# mask, color[, position, size]
 class MaskShape(Shape):
     def __init__(self, mask, color, position=None, size=None):
         self.mask = None
@@ -249,7 +254,7 @@ class MaskShape(Shape):
     def mask_set(self, mask):
         if isinstance(mask, str):
             self.mask = Image.open(mask).convert("L")
-        elif isinstance(mask, PImage):
+        elif isinstance(mask, SodaImage):
             self.mask = mask.get_image("L")
         elif isinstance(mask, Image.Image):
             self.mask = mask.convert("L")
@@ -270,7 +275,8 @@ class MaskShape(Shape):
         return MaskShape(self.mask, self.color, self.position, (size[0] * k, size[1] * k))
 
 
-class PImage(Shape):
+# image[, position, size, mask]
+class SodaImage(Shape):
     def __init__(self, image, position=(0, 0), size=None, mask=None):
         self.size = tuple(size) if size is not None else None
         self.set_image(image)
@@ -302,7 +308,7 @@ class PImage(Shape):
         if self.mask is not None:
             if isinstance(self.mask, str):
                 mask = Image.open(self.mask, "L")
-            elif isinstance(self.mask, PImage):
+            elif isinstance(self.mask, SodaImage):
                 mask = self.mask.get_image("L")
             elif isinstance(self.mask, Image.Image):
                 mask = self.mask.convert("L")
@@ -314,6 +320,7 @@ class PImage(Shape):
         draw.paste(self.image, position, mask=mask)
 
 
+# o_class, arg_names, **params
 class Template:
     def __init__(self, o_class, arg_names, **params):
         self.params = params
@@ -335,27 +342,29 @@ class Template:
         return self.create(*args, **params)
 
 
+# width[, height, color, position]
 class Rectangle(Polygon):
-    def __init__(self, width: int, height=None, color=(0, 0, 0, 255), position=(0, 0)):
+    def __init__(self, width, height=None, color=(0, 0, 0, 255), position=(0, 0)):
         height = get_default(height, width)
         dots = [Dot(position[0] + width * (i in [1, 2]),
                     position[1] + height * (i > 1)) for i in range(4)]
         super().__init__(dots, color)
 
-    def set_size(self, height, width=None):
-        width = get_default(width, height)
+    def set_size(self, width, height=None):
+        height = get_default(height, width)
         self.__init__(height, width, self.color, (self.dots[0].x, self.dots[0].y))
 
     def __str__(self):
         return super().__str__().replace("Polygon", "Rectangle")
 
 
+# shape, box[, position]
 class FitBox(Shape):
-    def __init__(self, shape: Shape, box, position=Dot(0, 0), color="red"):
+    def __init__(self, shape: Shape, box, position=Dot(0, 0)):
         self.debug = False
         self.initial = shape
         self.position = position
-        self.color_set(color)
+        self.color_set("red")
         if type(box) in (tuple, list):
             is_int = sum(isinstance(box[i], int) for i in range(len(box)))
             if is_int:
@@ -418,9 +427,8 @@ class Canvas:
             self.size = image.size
         draw = ImageDraw.Draw(image)
         for obj in self.objects:
-            d = draw if not isinstance(obj["object"], PImage) else image
+            d = draw if not isinstance(obj["object"], SodaImage) else image
             obj["object"].render(d, obj["position"])
-        nsize = tuple(image.size[i] * 2 for i in range(2))
         return image
 
     def save(self, file, extension=None):
@@ -436,16 +444,22 @@ class Canvas:
         return Dot(self.size[0] // 2, self.size[1] // 2)
 
 
-def build_gif(renders, framerate=60, name=None):
-    letter_set = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
-    path = name or "anim-{}".format("".join([random.choice(letter_set) for i in range(10)]))
-    images = []
-    for i in range(len(renders)):
-        images.append(io.BytesIO())
-        renders[i].save(images[-1], "png")
-        images[-1].seek(0)
-        images[-1] = imageio.imread(images[-1])
-    imageio.mimsave(path + ".gif", images, duration=1 / framerate)
+class GIF:
+    def __init__(self, canvas=None):
+        self.images = []
+        self.canvas = canvas
+
+    def add(self, image=None):
+        image = image or self.canvas.render()
+        bio = io.BytesIO()
+        image.save(bio, "png")
+        bio.seek(0)
+        self.images.append(imageio.imread(bio))
+
+    def save(self, name=None, framerate=60):
+        letter_set = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
+        path = name or "anim-{}".format("".join([random.choice(letter_set) for i in range(10)]))
+        imageio.mimsave(path + ".gif", self.images, duration=1 / framerate)
 
 
 def random_dot(canvas):
@@ -453,4 +467,5 @@ def random_dot(canvas):
         random.randint(0, canvas.size[0] - 1),
         random.randint(0, canvas.size[1] - 1)
     )
+
 

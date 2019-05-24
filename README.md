@@ -315,13 +315,6 @@ align is a string of two chars (first is horizontal align, second is vertical):
 
 In example, default "cs" centers text horizontally and pins its top to the vertical position
 
-
-### MaskShape
-**
-
-
-
-
 ____
 This part is still not documented. You might wait a few days.    
 
