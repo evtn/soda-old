@@ -53,6 +53,20 @@ Despite the fact that Soda is intended for creating images, its main feature is 
 So, let's make a better example with GIF animation:
 
 ### Building a GIF
+
+Soda has an easy-to-use GIF builder: soda.GIF class.
+Default use is something like this:
+```python
+import soda
+canvas = soda.Canvas()
+gif = soda.GIF(canvas)
+
+for frames in range(100):
+    # some changes to canvas
+    gif.add() # image=None
+gif.save() # name=None, framerate=60
+```
+
 Imagine that you want to make an animation of 1600 squares randomly changing color. Pretty strange example, but here you are:    
 ```python
 import soda
@@ -60,7 +74,7 @@ multiplier = 5
 # let's create our canvas again
 canvas = soda.Canvas(size=(42 * multiplier, 42 * multiplier),
 	                 color="#fff") # no more green, okay?
-
+gif = soda.GIF(canvas)
 squares = []
 for i in range(1600):
     squares.append(soda.Rectangle(multiplier, color="#4680c2", position=(multiplier, multiplier))) # local position - square would have an additional offset
@@ -72,8 +86,8 @@ renders = []
 for i in range(100):
     for j in range(len(squares)):
         squares[j].color_set(soda.hsl()) # if there's no arguments, hsl() places random values
-    renders.append(canvas.render())
-soda.build_gif(renders, framerate=30)
+    gif.add()
+gif.save(framerate=30)
 
 ```
 ### Positioning
@@ -176,6 +190,7 @@ Accepts:
     + hex: `#fff`, `#103515`    
     + css: `white`    
     + hsl: `hsl(360, 82%, 60%)`    
+    + rgb: `rgb(255, 0, 0)`
 + RGB Tuple:    
 	+ rgb: (`240`, `100`, `10`)    
 	+ rgba: (`255`, `70`, `12`, `45`)    
@@ -217,33 +232,102 @@ ____
 Soda has 6 types of unique built-in shapes.    
 
 ### Polygon    
-The most used shape is definitely a polygon.    
+*The most popular shape in AppStore.*    
 
 Polygon constructor takes two arguments:    
 + `dots` - tuple/list of dot-like objects    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
 
-Polygon shares default Shape methods and defines a `to_list()` method (*returns: list of dots*)    
+**Specific methods**:    
+`to_list(pos)`    
+Takes a position and returns a list of dots according to this position    
+(*returns: list of dot-like lists*)    
 
 #### Rectangle    
-Rectangle is a wrapper class of Polygon.    
+*So straight*    
 
 Rectangle constructor takes four arguments:    
 + `width` - width of the rectangle in pixels    
 + `height` - height in pixels *default: passed width*    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
-+ `position` - dot-like object    
++ `position` - dot-like object *default: (0, 0)*    
 
-Rectangle has unique `set_size(width, height=None)` method, that changes its size (*returns: None*)    
+**Specific methods**:    
+`set_size(width, height=None)`    
+Changes the size of rectangle    
+(*returns: None*)    
 
-____
-This part is still not documented. You might wait a few days.
 
 ### Ellipse
+*The guy who is just fooling a**round***.    
+
+Ellipse constructor takes four arguments:    
++ `center` - dot-like object that defines a center of ellipse    
++ `x_radius` - horizontal radius of ellipse    
++ `y_radius` - vertical radius of ellipse *default: passed x_radius*    
++ `color` - see [Color notation](#parse-method). *default: "black"*    
+
+Ellipse has two specific methods:    
+**Specific methods**:    
+`to_list(pos)`    
+Takes a position and returns a two corners according to this position    
+(*returns: list of dot-like lists*)    
 
 #### Pieslice
+*A little Pacman for free.*    
+Ellipse constructor takes four arguments:    
++ `center` - dot-like object that defines a center of ellipse    
++ `x_radius` - horizontal radius of ellipse    
++ `y_radius` - vertical radius of ellipse *default: passed x_radius*    
++ `color` - see [Color notation](#parse-method). *default: "black"*    
++ `start` - start angle of the pie *default: 0*    
++ `stop` - stop angle of the pie *default: 360*    
+
+Pieslice is rendered from start to stop, clockwise.    
+It shares methods with Ellipse and Shape. Also, it has methods `start_set(start)` and `stop_set(stop)` to set start and stop values.
 
 ### Text
+*A simple way to write "Hello World" on your first image*
+Text constructor takes six arguments:
++ `text` - a string itself.
++ `font` - path of the font file you want to use
++ `size` - size in px
++ `position` - dot-like object that defines position *default: (0, 0)*    
++ `align` - string that defines align mode (more in *Align* section below) *default: "cs"*    
++ `color` - see [Color notation](#parse-method). *default: "black"*    
+  
+**Specific methods**:    
+`set_font(path, size)`    
+Changes font and size    
+(*returns: None*)    
+`set_size(size)`    
+Changes size    
+(*returns: None*)    
+`get_corners(position=(0, 0))`    
+Returns a list of dots considering align and specified position
+(*returns: list of dot-like lists*)    
+
+#### Align
+align is a string of two chars (first is horizontal align, second is vertical):
+`c` centers text regarding its position
+`s` places start of the text (left or top) to the position
+`e` places end of the text (right or bottom) to the position
+
+In example, default "cs" centers text horizontally and pins its top to the vertical position
+
+
+### MaskShape
+**
+
+
+
+
+____
+This part is still not documented. You might wait a few days.    
+
+
+
+
 
 ### MaskShape
 
