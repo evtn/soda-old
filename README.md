@@ -200,8 +200,8 @@ Accepts:
 ____
 
 ### Dot    
-Defines an abstract dot on any canvas   
-*dot-like object* is a tuple or list of 2 integers, or the Dot itself
+Defines an abstract dot on any canvas.   
+*dot-like object* is a tuple or list of 2 integers, or the Dot itself.
 
 #### Arguments    
 `x, y` - dot position    
@@ -213,17 +213,17 @@ Moves a dot to another position. If some parameter isn't specified, it would sta
 ____
 
 ### Template    
-Defines a template to create similiar shapes    
+Defines a template to create similiar shapes.    
 
 #### Arguments    
-`o_class`  desired object class, i.e. Ellipse    
-`arg_names`  tuple/list containing names of arguments as they would be passed    
-`**params`  static default params passed to the shape constructor    
+`o_class`  desired object class, i.e. Ellipse.    
+`arg_names`  tuple/list containing names of arguments as they would be passed.    
+`**params`  static default params passed to the shape constructor.    
 
 #### Methods    
 `create(*args, **params)`    
 Creates a shape with specified args, default params and passed params.    
-Priority of arguments (from high to low): params - default params - args    
+Priority of arguments (from high to low): params - default params - args.    
 *returns: shape instance*    
 
 ____
@@ -235,7 +235,7 @@ Soda has 6 types of unique built-in shapes.
 *The most popular shape in AppStore.*    
 
 Polygon constructor takes two arguments:    
-+ `dots` - tuple/list of dot-like objects    
++ `dots` - tuple/list of dot-like objects.    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
 
 **Specific methods**:    
@@ -248,9 +248,9 @@ Takes a position and returns a list of dots according to this position
 
 Rectangle constructor takes four arguments:    
 + `width` - width of the rectangle in pixels    
-+ `height` - height in pixels *default: passed width*    
++ `height` - height in pixels. *default: passed width*    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
-+ `position` - dot-like object *default: (0, 0)*    
++ `position` - dot-like object. *default: (0, 0)*    
 
 **Specific methods**:    
 `set_size(width, height=None)`    
@@ -264,7 +264,7 @@ Changes the size of rectangle
 Ellipse constructor takes four arguments:    
 + `center` - dot-like object that defines a center of ellipse    
 + `x_radius` - horizontal radius of ellipse    
-+ `y_radius` - vertical radius of ellipse *default: passed x_radius*    
++ `y_radius` - vertical radius of ellipse. *default: passed x_radius*    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
 
 Ellipse has two specific methods:    
@@ -275,13 +275,13 @@ Takes a position and returns a two corners according to this position
 
 #### Pieslice
 *A little Pacman for free.*    
-Ellipse constructor takes four arguments:    
-+ `center` - dot-like object that defines a center of ellipse    
-+ `x_radius` - horizontal radius of ellipse    
-+ `y_radius` - vertical radius of ellipse *default: passed x_radius*    
+Pieslice constructor takes four arguments:    
++ `center` - dot-like object that defines a center of ellipse.    
++ `x_radius` - horizontal radius of ellipse.    
++ `y_radius` - vertical radius of ellipse. *default: passed x_radius*    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
-+ `start` - start angle of the pie *default: 0*    
-+ `stop` - stop angle of the pie *default: 360*    
++ `start` - start angle of the pie. *default: 0*    
++ `stop` - stop angle of the pie. *default: 360*    
 
 Pieslice is rendered from start to stop, clockwise.    
 It shares methods with Ellipse and Shape. Also, it has methods `start_set(start)` and `stop_set(stop)` to set start and stop values.
@@ -292,8 +292,8 @@ Text constructor takes six arguments:
 + `text` - a string itself.
 + `font` - path of the font file you want to use
 + `size` - size in px
-+ `position` - dot-like object that defines position *default: (0, 0)*    
-+ `align` - string that defines align mode (more in *Align* section below) *default: "cs"*    
++ `position` - dot-like object that defines position. *default: (0, 0)*    
++ `align` - string that defines align mode (more in *Align* section below). *default: "cs"*    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
   
 **Specific methods**:    
