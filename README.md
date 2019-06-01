@@ -136,7 +136,7 @@ Renders an image of the canvas.
 Saves an image of the canvas, equivalent to `.render().save(file, extension)`    
 *returns: None*    
 
-`get_corners() and get_center()`    
+`corners_get() and get_center()`    
 *returns: list of Dot, containing corners of the canvas*; *returns: Dot of canvas center*    
 
 ____
@@ -253,7 +253,7 @@ Rectangle constructor takes four arguments:
 + `position` - dot-like object. *default: (0, 0)*    
 
 **Specific methods**:    
-`set_size(width, height=None)`    
+`size_set(width, height=None)`    
 Changes the size of rectangle    
 (*returns: None*)    
 
@@ -275,6 +275,7 @@ Takes a position and returns a two corners according to this position
 
 #### Pieslice
 *A little Pacman for free.*    
+
 Pieslice constructor takes four arguments:    
 + `center` - dot-like object that defines a center of ellipse.    
 + `x_radius` - horizontal radius of ellipse.    
@@ -288,6 +289,7 @@ It shares methods with Ellipse and Shape. Also, it has methods `start_set(start)
 
 ### Text
 *A simple way to write "Hello World" on your first image*
+
 Text constructor takes six arguments:
 + `text` - a string itself.
 + `font` - path of the font file you want to use
@@ -297,13 +299,15 @@ Text constructor takes six arguments:
 + `color` - see [Color notation](#parse-method). *default: "black"*    
   
 **Specific methods**:    
-`set_font(path, size)`    
+`font_set(path, size)`    
 Changes font and size    
 (*returns: None*)    
-`set_size(size)`    
+
+`size_set(size)`    
 Changes size    
 (*returns: None*)    
-`get_corners(position=(0, 0))`    
+
+`corners_get(position=(0, 0))`    
 Returns a list of dots considering align and specified position
 (*returns: list of dot-like lists*)    
 
@@ -315,14 +319,28 @@ align is a string of two chars (first is horizontal align, second is vertical):
 
 In example, default "cs" centers text horizontally and pins its top to the vertical position
 
-____
-This part is still not documented. You might wait a few days.    
-
-
-
-
-
 ### MaskShape
+*He was a boring gray mask, but became a colored shape*    
+
+MaskShape is a shape defined by a lightness mask. Black pixels of mask are transparent, and white pixels are solid. Pretty simple.    
+
+MaskShape constructor takes four arguments:    
++ `mask` - the mask itself (check [Image notation](#image-notation))    
++ `color` - color of the shape (check [Color notation](#parse-method))    
++ `position` - dot-like object that defines position. *default: (0, 0)*    
++ `size` - size to fit the shape in. If not specified, the shape would be at the size of original image *default: None*    
+
+**Specific methods**:    
+`mask_set(mask)`    
+Sets a mask to the shape
+(*returns: None*)
+`mask_get`
+Returns current mask of the shape.
+(*returns: PIL.Image.Image object of the mask*)
+
+____
+This part is still not documented. You might wait a few ~~days~~ weeks.    
+
 
 ### FitBox
 
