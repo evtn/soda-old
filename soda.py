@@ -187,7 +187,7 @@ class Pieslice(Ellipse):
 
     def resized(self, k):
         return super().resized(k, start=-self.start, stop=-self.stop)
-
+        
 
 # text, font, size[, position, align, color]
 class Text(Shape):
@@ -198,11 +198,11 @@ class Text(Shape):
         self.position = position
         self.align = align
 
-    def set_font(self, path, size):
+    def font_set(self, path, size):
         self.font = ImageFont.truetype(path, size)
         self.font_ = [path, size]
 
-    def set_size(self, size):
+    def size_set(self, size):
         self.set_font(self.font_[0], size)
 
     def render(self, draw, position):
@@ -213,7 +213,7 @@ class Text(Shape):
                             fill=self.color_get(),
                             align={"c": "center", "s": "left", "e": "right"}[self.align[0]])
 
-    def get_corners(self, position=(0, 0)):
+    def corners_get(self, position=(0, 0)):
         size = self.box_get()
         corner = [0, 0]
         for i in range(2):
@@ -234,30 +234,27 @@ class Text(Shape):
 
 # mask, color[, position, size]
 class MaskShape(Shape):
-    def __init__(self, mask, color, position=None, size=None):
+    def __init__(self, mask, color, position=(0, 0), size=None):
         self.mask = None
-        self.mask_set(mask)
+        self.set_mask(mask)
         self.color_set(color)
-        self.position = get_default(position, Dot(0, 0))
+        self.position = get_dot(position)
         self.size = None
         if size is not None:
             self.size = tuple(size)
 
     def render(self, draw, position):
         position = [position.x + self.position.x, position.y + self.position.y]
-        if self.size is not None and self.mask.size != self.size:
-            mask = mask_resize(self, self.mask)
-        else:
-            mask = self.mask
+        mask = self.mask_get()
+        if self.size is not None and mask.size != self.size:
+            mask = mask_resize(self, mask)
         draw.bitmap(position, mask, fill=self.color_get())
 
     def mask_set(self, mask):
-        if isinstance(mask, str):
-            self.mask = Image.open(mask).convert("L")
-        elif isinstance(mask, SodaImage):
-            self.mask = mask.get_image("L")
-        elif isinstance(mask, Image.Image):
-            self.mask = mask.convert("L")
+        self.mask = SodaImage(mask)
+
+    def mask_get(self):
+        return self.mask.image_get("L")
 
     def box_get(self):
         return get_default(self.size, self.mask.size)
@@ -278,21 +275,24 @@ class MaskShape(Shape):
 # image[, position, size, mask]
 class SodaImage(Shape):
     def __init__(self, image, position=(0, 0), size=None, mask=None):
+        self.mask = SodaImage(mask) if mask is not None else None
         self.size = tuple(size) if size is not None else None
-        self.set_image(image)
+        self.image_set(image)
         self.position = get_dot(position)
-        self.mask = mask
 
-    def get_image(self, mode=None):
+    def image_get(self, mode=None):
+        image = self.image.render() if isinstance(self.image, Canvas) else self.image.copy()
         if mode is None or mode == self.image.mode:
-            return self.image.copy()
-        return self.image.copy().convert(mode)
+            return image
+        return image.convert(mode)
 
-    def set_image(self, image):
+    def image_set(self, image):
         if isinstance(image, str):
             self.image = Image.open(image)
         elif isinstance(image, Image.Image):
             self.image = image.copy()
+        elif isinstance(image, Canvas):
+            self.image = image
         else:
             raise TypeError("invalid image")
         if self.size is None:
@@ -306,18 +306,13 @@ class SodaImage(Shape):
 
     def render(self, draw, position):
         if self.mask is not None:
-            if isinstance(self.mask, str):
-                mask = Image.open(self.mask, "L")
-            elif isinstance(self.mask, SodaImage):
-                mask = self.mask.get_image("L")
-            elif isinstance(self.mask, Image.Image):
-                mask = self.mask.convert("L")
+            mask = self.mask.image_get("L")
             if mask.size != self.image.size:
                 mask = mask_resize(self.image, mask)
         else:
             mask = None
         position = tuple([position.x + self.position.x, position.y + self.position.y])
-        draw.paste(self.image, position, mask=mask)
+        draw.paste(self.image_get(), position, mask=mask)
 
 
 # o_class, arg_names, **params
@@ -350,7 +345,7 @@ class Rectangle(Polygon):
                     position[1] + height * (i > 1)) for i in range(4)]
         super().__init__(dots, color)
 
-    def set_size(self, width, height=None):
+    def size_set(self, width, height=None):
         height = get_default(height, width)
         self.__init__(height, width, self.color, (self.dots[0].x, self.dots[0].y))
 
@@ -381,7 +376,7 @@ class FitBox(Shape):
         return "soda.FitBox{}".format(self.box)
 
     def render(self, draw, position):
-        shape = self.get_shape()
+        shape = self.shape_get()
         position = Dot(position.x + self.position.x, position.y + self.position.y)
         if self.debug:
             draw.rectangle(((position.x, position.y), (position.x + self.box[0], position.y + self.box[1])),
@@ -391,7 +386,7 @@ class FitBox(Shape):
     def resized(self, k):
         return FitBox(self.initial, tuple(self.box[i] // k for i in range(len(self.box))))
 
-    def get_shape(self):
+    def shape_get(self):
         return self.initial.resized(fit(self.box, self.initial.box_get()))
 
 
@@ -431,16 +426,16 @@ class Canvas:
             obj["object"].render(d, obj["position"])
         return image
 
-    def save(self, file, extension=None):
+    def save(self, file, extension="png"):
         self.render().save(file, extension)
 
-    def get_corners(self):
+    def corners_get(self):
         return [Dot(dot[0], dot[1]) for dot in [(0, 0),
                                                 (self.size[0], 0),
                                                 (self.size[0], self.size[1]),
                                                 (0, self.size[1])]]
 
-    def get_center(self):
+    def center_get(self):
         return Dot(self.size[0] // 2, self.size[1] // 2)
 
 
@@ -459,7 +454,7 @@ class GIF:
     def save(self, name=None, framerate=60):
         letter_set = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
         path = name or "anim-{}".format("".join([random.choice(letter_set) for i in range(10)]))
-        imageio.mimsave(path + ".gif", self.images, duration=1 / framerate)
+        imageio.mimsave(path + (".gif" if not path.endswith(".gif") else ""), self.images, duration=1 / framerate)
 
 
 def random_dot(canvas):
