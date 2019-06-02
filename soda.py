@@ -193,7 +193,7 @@ class Pieslice(Ellipse):
 class Text(Shape):
     def __init__(self, text, font, size, position=Dot(0, 0), align="cs", color=(0, 0, 0, 255)):
         self.text = text
-        self.set_font(font, size)
+        self.font_set(font, size)
         self.color_set(color)
         self.position = position
         self.align = align
@@ -203,11 +203,11 @@ class Text(Shape):
         self.font_ = [path, size]
 
     def size_set(self, size):
-        self.set_font(self.font_[0], size)
+        self.font_set(self.font_[0], size)
 
     def render(self, draw, position):
         position = [position.x + self.position.x, position.y + self.position.y]
-        draw.multiline_text(self.get_corners(position)[0],
+        draw.multiline_text(self.corners_get(position)[0],
                             text=self.text,
                             font=self.font,
                             fill=self.color_get(),
@@ -236,7 +236,7 @@ class Text(Shape):
 class MaskShape(Shape):
     def __init__(self, mask, color, position=(0, 0), size=None):
         self.mask = None
-        self.set_mask(mask)
+        self.mask_set(mask)
         self.color_set(color)
         self.position = get_dot(position)
         self.size = None
@@ -388,6 +388,9 @@ class FitBox(Shape):
 
     def shape_get(self):
         return self.initial.resized(fit(self.box, self.initial.box_get()))
+
+    def box_get(self):
+        return box
 
 
 class Canvas:
