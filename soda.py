@@ -72,6 +72,8 @@ class Color:
 
     @staticmethod
     def parse(col, mode="RGBA"):
+        if isinstance(col, Color):
+            return col
         return col[:4 if mode == "RGBA" else 3] if type(col) != str else ImageColor.getrgb(col) + (
             (255,) if mode == "RGBA" else tuple())
 
@@ -191,11 +193,11 @@ class Pieslice(Ellipse):
 
 # text, font, size[, position, align, color]
 class Text(Shape):
-    def __init__(self, text, font, size, position=Dot(0, 0), align="cs", color=(0, 0, 0, 255)):
+    def __init__(self, text, font, size=1000, position=Dot(0, 0), align="cs", color=(0, 0, 0, 255)):
         self.text = text
         self.font_set(font, size)
         self.color_set(color)
-        self.position = position
+        self.position = get_dot(position)
         self.align = align
 
     def font_set(self, path, size):
@@ -206,6 +208,7 @@ class Text(Shape):
         self.font_set(self.font_[0], size)
 
     def render(self, draw, position):
+        position = get_dot(position)
         position = [position.x + self.position.x, position.y + self.position.y]
         draw.multiline_text(self.corners_get(position)[0],
                             text=self.text,
@@ -244,6 +247,7 @@ class MaskShape(Shape):
             self.size = tuple(size)
 
     def render(self, draw, position):
+        position = get_dot(position)
         position = [position.x + self.position.x, position.y + self.position.y]
         mask = self.mask_get()
         if self.size is not None and mask.size != self.size:
@@ -313,6 +317,15 @@ class SodaImage(Shape):
             mask = None
         position = tuple([position.x + self.position.x, position.y + self.position.y])
         draw.paste(self.image_get(), position, mask=mask)
+
+    def square_get(self):
+        image = self.image_get()
+        min_size = min(image.size)
+        offset = (max(image.size) - min_size) // 2
+        if image.size[0] == min_size:
+            return image.crop((0, offset, min_size, offset + min_size))
+        else:
+            return image.crop((offset, 0, offset + min_size, min_size))
 
 
 # o_class, arg_names, **params
@@ -394,7 +407,7 @@ class FitBox(Shape):
 
 
 class Canvas:
-    def __init__(self, size=(1000, 1000), color="white", mode="RGB", background="color"):
+    def __init__(self, size=(1000, 1000), color="white", mode="RGB", background=None):
         self.color = Color.parse(color, mode)
         self.objects = []
         self.mode = mode
@@ -418,11 +431,10 @@ class Canvas:
         self.objects[index]["position"] = Dot(*position)
 
     def render(self):
-        if self.background == "color":
+        if self.background is None:
             image = Image.new(self.mode, self.size, self.color)
         else:
-            image = Image.open(self.background)
-            self.size = image.size
+            image = SodaImage(self.background, size=self.size).image_get()
         draw = ImageDraw.Draw(image)
         for obj in self.objects:
             d = draw if not isinstance(obj["object"], SodaImage) else image
