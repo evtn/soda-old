@@ -73,7 +73,7 @@ class Color:
     @staticmethod
     def parse(col, mode="RGBA"):
         if isinstance(col, Color):
-            return col
+            return col.color
         return col[:4 if mode == "RGBA" else 3] if type(col) != str else ImageColor.getrgb(col) + (
             (255,) if mode == "RGBA" else tuple())
 
