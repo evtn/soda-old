@@ -7,6 +7,9 @@ except ImportError:
     print("Loading without GIF-builder...")
 
 
+gk = 2
+
+
 def all_of(iterable, vtype):
     return not any(not isinstance(iterable[i], vtype) for i in (range(len(iterable)) if type(iterable) in [list, tuple] else iterable))
 
@@ -16,9 +19,12 @@ def get_default(to_check, default):
 
 
 def hsl(h=None, s=None, l=None):
-    h = get_default(h, random.randint(0, 360)) % 360
-    s = get_default(s, random.randint(0, 100)) % 100
-    l = get_default(l, random.randint(0, 100)) % 100
+    h = (h, h) if type(h) in [int, float] else (0, 360) if h is None else h
+    s = (s, s) if type(s) in [int, float] else (0, 100) if s is None else s
+    l = (l, l) if type(l) in [int, float] else (0, 100) if l is None else l
+    h = random.randint(*[int(x) for x in h]) % 361
+    s = random.randint(*[int(x) for x in s]) % 101
+    l = random.randint(*[int(x) for x in l]) % 101
     return Color.parse("hsl({}, {}%, {}%)".format(h, s, l))
 
 
@@ -30,8 +36,7 @@ def mask_resize(shape, mask):
     mask_ = Image.new("L", shape.size)
     k = fit(shape.size, mask.size)
     mask = mask.resize(
-        (int(mask.size[0] * k), int(mask.size[1] * k))
-    )
+        (int(mask.size[0] * k), int(mask.size[1] * k)), resample=Image.LANCZOS)
     m_position = [0, 0]
     for i in range(2):
         if mask.size[i] != shape.size[i]:
@@ -74,8 +79,7 @@ class Color:
     def parse(col, mode="RGBA"):
         if isinstance(col, Color):
             return col.color
-        return col[:4 if mode == "RGBA" else 3] if type(col) != str else ImageColor.getrgb(col) + (
-            (255,) if mode == "RGBA" else tuple())
+        return tuple(col[:4 if mode == "RGBA" else 3] if type(col) != str else ImageColor.getrgb(col) + ((255,) if mode == "RGBA" else tuple()))
 
 
 class Shape:
@@ -110,7 +114,7 @@ class Polygon(Shape):
         self.dots = tuple(get_dot(dot) for dot in dots)
 
     def to_list(self, pos):
-        return [(dot.x + pos.x, dot.y + pos.y) for dot in self.dots]
+        return [((dot.x + pos.x) * gk, (dot.y + pos.y) * gk) for dot in self.dots]
 
     def render(self, draw, position):
         draw.polygon(self.to_list(position), fill=self.color_get())
@@ -131,6 +135,45 @@ class Polygon(Shape):
         return Polygon(dots, self.color)
 
 
+class RoundRect(Polygon):
+    def __init__(self, width, height=None, radius=0, color=(0, 0, 0, 255), position=(0, 0)):
+        self.size = [width, height]
+        self.color_set(color)
+        self.radius = radius if type(radius) != int else [radius] * 4
+        self.position = position
+
+    def radius_limiter(self):
+        for corner in range(4):
+            s = self.radius[corner] + self.radius[(corner + 1) % 4]
+            if s > self.size[corner % 2]:
+                k = self.radius[corner] / s
+                self.radius[corner] = self.size[corner % 2] * k
+                self.radius[(corner + 1) % 4] = self.size[corner % 2] * (1 - k)
+
+    def construct(self):
+        self.radius_limiter()
+        shapes = []
+        dots = [0] * 8
+        for corner in range(4):
+            center = [0, 0]
+            cond = bool(corner % 3), corner > 1
+            for subcorner in range(2):
+                d = [cond[subcorner] * self.size[subcorner],
+                     (-1) ** cond[1 - subcorner] * self.radius[corner] + cond[1 - subcorner] * self.size[1 - subcorner]]
+                d = d[::(-1) ** subcorner]
+                dots[corner * 2 + (corner % 2 != subcorner)] = Dot(*d)
+                center[1 - subcorner] = d[1 - subcorner] + self.position[1 - subcorner]
+            shapes.append(Pieslice(center, self.radius[corner], color=self.color, start=90 * (1 - corner), stop=90 * (2 - corner)))
+        for dot in dots:
+            dot.move(dot.x + self.position[0], dot.y + self.position[1])
+        shapes.append(Polygon(dots, self.color))
+        return shapes
+
+    def render(self, draw, position):
+        for shape in self.construct():
+            shape.render(draw, position)
+
+
 # center, x_radius[, y_radius, color]
 class Ellipse(Shape):
     def __init__(self, center, x_radius, y_radius=None, color=(0, 0, 0, 255)):
@@ -140,8 +183,10 @@ class Ellipse(Shape):
 
     def to_list(self, pos):
         pos = get_default(pos, [0, 0])
-        return [(self.center.x + pos.x - self.x_radius, self.center.y + pos.y - self.y_radius),
-                (self.center.x + pos.x + self.x_radius, self.center.y + pos.y + self.y_radius)]
+        coords = [(self.center.x + pos.x - self.x_radius, self.center.y + pos.y - self.y_radius),
+                  (self.center.x + pos.x + self.x_radius, self.center.y + pos.y + self.y_radius)]
+        print(coords, [tuple(i * gk for i in el) for el in coords])
+        return [tuple(i * gk for i in el) for el in coords]
 
     def radius_set(self, x_radius, y_radius=None):
         self.x_radius = x_radius
@@ -158,8 +203,8 @@ class Ellipse(Shape):
         if self.x_radius == self.y_radius:
             return "soda.Ellipse(center: {}, radius: {})".format(self.center, self.x_radius)
         return "soda.Ellipse(center: {}, horizontal radius: {}, vertical radius: {})".format(self.center,
-                                                                                               self.x_radius,
-                                                                                               self.y_radius)
+                                                                                             self.x_radius,
+                                                                                             self.y_radius)
 
     def resized(self, k, **params):
         new_x = self.x_radius * k
@@ -195,7 +240,7 @@ class Pieslice(Ellipse):
 class Text(Shape):
     def __init__(self, text, font, size=1000, position=Dot(0, 0), align="cs", color=(0, 0, 0, 255)):
         self.text = text
-        self.font_set(font, size)
+        self.font_set(font, size * gk)
         self.color_set(color)
         self.position = get_dot(position)
         self.align = align
@@ -205,7 +250,7 @@ class Text(Shape):
         self.font_ = [path, size]
 
     def size_set(self, size):
-        self.font_set(self.font_[0], size)
+        self.font_set(self.font_[0], size * gk)
 
     def render(self, draw, position):
         position = get_dot(position)
@@ -229,7 +274,7 @@ class Text(Shape):
         return [corner, [corner[0] + size[0], corner[1] + size[1]]]
 
     def box_get(self):
-        return self.font.getsize_multiline(self.text)
+        return tuple(s // gk for s in self.font.getsize_multiline(self.text))
 
     def resized(self, k):
         return Text(self.text, self.font_[0], int(self.font_[1] * k), self.position, self.align, self.color)
@@ -248,17 +293,18 @@ class MaskShape(Shape):
 
     def render(self, draw, position):
         position = get_dot(position)
-        position = [position.x + self.position.x, position.y + self.position.y]
+        position = [(position.x + self.position.x) * gk, (position.y + self.position.y) * gk]
         mask = self.mask_get()
         if self.size is not None and mask.size != self.size:
             mask = mask_resize(self, mask)
+        mask.resize(tuple(s * gk for s in mask.size))
         draw.bitmap(position, mask, fill=self.color_get())
 
     def mask_set(self, mask):
         self.mask = SodaImage(mask)
 
     def mask_get(self):
-        return self.mask.image_get("L")
+        return self.mask.get("L")
 
     def box_get(self):
         return get_default(self.size, self.mask.size)
@@ -281,16 +327,20 @@ class SodaImage(Shape):
     def __init__(self, image, position=(0, 0), size=None, mask=None):
         self.mask = SodaImage(mask) if mask is not None else None
         self.size = tuple(size) if size is not None else None
-        self.image_set(image)
+        self.set(image)
         self.position = get_dot(position)
 
-    def image_get(self, mode=None):
+    def get(self, mode=None):
         image = self.image.render() if isinstance(self.image, Canvas) else self.image.copy()
-        if mode is None or mode == self.image.mode:
+        if self.image.size != self.size:
+            image = self.crop(self.size)
+        if mode is None or mode == image.mode:
             return image
         return image.convert(mode)
 
-    def image_set(self, image):
+    def set(self, image):
+        if isinstance(image, SodaImage):
+            self.image = image.image
         if isinstance(image, str):
             self.image = Image.open(image)
         elif isinstance(image, Image.Image):
@@ -301,31 +351,36 @@ class SodaImage(Shape):
             raise TypeError("invalid image")
         if self.size is None:
             self.size = self.image.size
-        elif self.image.size != self.size:
-            k = fit(self.size, self.image.size)
-            self.image = self.resized(k)
+        self.size = tuple([self.size[i] * gk for i in range(2)])        
 
-    def resized(self, k):
-        return self.image.resize(tuple(int(self.image.size[i] * k) for i in range(2)), resample=Image.LANCZOS)
+    def resized(self, k, image=None, fitbox=True):
+        image = get_default(image, self.get())
+        res = image.resize(tuple(int(image.size[i] * k) for i in range(2)), resample=Image.LANCZOS)
+        if fitbox:
+            return SodaImage(res)
+        return res
 
     def render(self, draw, position):
         if self.mask is not None:
-            mask = self.mask.image_get("L")
+            mask = self.mask.get("L")
             if mask.size != self.image.size:
                 mask = mask_resize(self.image, mask)
         else:
             mask = None
         position = tuple([position.x + self.position.x, position.y + self.position.y])
-        draw.paste(self.image_get(), position, mask=mask)
+        draw.paste(self.get(), position, mask=mask)
 
-    def square_get(self):
-        image = self.image_get()
-        min_size = min(image.size)
-        offset = (max(image.size) - min_size) // 2
-        if image.size[0] == min_size:
-            return image.crop((0, offset, min_size, offset + min_size))
-        else:
-            return image.crop((offset, 0, offset + min_size, min_size))
+    def crop(self, size):
+        if type(size) == int:
+            size = (size, size)
+        k = fit(self.size, size)
+        image = self.resized(1/k, fitbox=False)
+        offset = [(image.size[i] - size[i]) // 2 for i in range(2)]
+        return image.crop(offset + [size[i] + offset[i] for i in range(2)])
+
+
+    def square_get(self, size=None):
+        return self.crop(get_default(size, min(self.size)))
 
 
 # o_class, arg_names, **params
@@ -371,7 +426,7 @@ class FitBox(Shape):
     def __init__(self, shape: Shape, box, position=Dot(0, 0)):
         self.debug = False
         self.initial = shape
-        self.position = position
+        self.position = get_dot(position)
         self.color_set("red")
         if type(box) in (tuple, list):
             is_int = sum(isinstance(box[i], int) for i in range(len(box)))
@@ -384,13 +439,14 @@ class FitBox(Shape):
                 self.box = Polygon(tuple(Dot(*dot) for dot in box)).box_get()
         else:
             self.box = box, box
+        box = tuple([b * gk for b in box])
 
     def __str__(self):
         return "soda.FitBox{}".format(self.box)
 
     def render(self, draw, position):
         shape = self.shape_get()
-        position = Dot(position.x + self.position.x, position.y + self.position.y)
+        position = Dot((position.x + self.position.x) * gk, (position.y + self.position.y) * gk)
         if self.debug:
             draw.rectangle(((position.x, position.y), (position.x + self.box[0], position.y + self.box[1])),
                            fill=self.color_get())
@@ -408,7 +464,7 @@ class FitBox(Shape):
 
 class Canvas:
     def __init__(self, size=(1000, 1000), color="white", mode="RGB", background=None):
-        self.color = Color.parse(color, mode)
+        self.color = Color(color)
         self.objects = []
         self.mode = mode
         if type(size) == int:
@@ -432,14 +488,16 @@ class Canvas:
 
     def render(self):
         if self.background is None:
-            image = Image.new(self.mode, self.size, self.color)
+            image = Image.new(self.mode, tuple([size * gk for size in self.size]), self.color.color)
         else:
-            image = SodaImage(self.background, size=self.size).image_get()
+            image = SodaImage(self.background).get()
+            image = image.resize(tuple(s * gk for s in image.size))
+        self.size = image.size
         draw = ImageDraw.Draw(image)
         for obj in self.objects:
             d = draw if not isinstance(obj["object"], SodaImage) else image
             obj["object"].render(d, obj["position"])
-        return image
+        return image.resize(tuple(s // gk for s in self.size), resample=Image.LANCZOS)
 
     def save(self, file, extension="png"):
         self.render().save(file, extension)
