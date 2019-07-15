@@ -330,10 +330,10 @@ class SodaImage(Shape):
         self.set(image)
         self.position = get_dot(position)
 
-    def get(self, mode=None):
+    def get(self, mode=None, orig=False):
         image = self.image.render() if isinstance(self.image, Canvas) else self.image.copy()
-        if self.image.size != self.size:
-            image = self.crop(self.size)
+        if image.size != self.size and not orig:
+            image = self.crop(self.size, image)
         if mode is None or mode == image.mode:
             return image
         return image.convert(mode)
@@ -341,7 +341,7 @@ class SodaImage(Shape):
     def set(self, image):
         if isinstance(image, SodaImage):
             self.image = image.image
-        if isinstance(image, str):
+        elif isinstance(image, str):
             self.image = Image.open(image)
         elif isinstance(image, Image.Image):
             self.image = image.copy()
@@ -354,7 +354,7 @@ class SodaImage(Shape):
         self.size = tuple([self.size[i] * gk for i in range(2)])        
 
     def resized(self, k, image=None, fitbox=True):
-        image = get_default(image, self.get())
+        image = image or self.get(orig=True)
         res = image.resize(tuple(int(image.size[i] * k) for i in range(2)), resample=Image.LANCZOS)
         if fitbox:
             return SodaImage(res)
@@ -370,11 +370,12 @@ class SodaImage(Shape):
         position = tuple([position.x + self.position.x, position.y + self.position.y])
         draw.paste(self.get(), position, mask=mask)
 
-    def crop(self, size):
+    def crop(self, size, image=None):
+        image = image or self.get(orig=True)
         if type(size) == int:
             size = (size, size)
-        k = fit(self.size, size)
-        image = self.resized(1/k, fitbox=False)
+        k = fit(image.size, size)
+        image = self.resized(1/k, image, fitbox=False)
         offset = [(image.size[i] - size[i]) // 2 for i in range(2)]
         return image.crop(offset + [size[i] + offset[i] for i in range(2)])
 
@@ -439,7 +440,7 @@ class FitBox(Shape):
                 self.box = Polygon(tuple(Dot(*dot) for dot in box)).box_get()
         else:
             self.box = box, box
-        box = tuple([b * gk for b in box])
+        self.box = tuple([b * gk for b in box])
 
     def __str__(self):
         return "soda.FitBox{}".format(self.box)
