@@ -457,7 +457,7 @@ class FitBox(Shape):
         return FitBox(self.initial, tuple(self.box[i] // k for i in range(len(self.box))))
 
     def shape_get(self):
-        return self.initial.resized(fit(self.box, self.initial.box_get()))
+        return self.initial.resized(fit([x // gk for x in self.box], self.initial.box_get()))
 
     def box_get(self):
         return box
