@@ -7,7 +7,7 @@ except ImportError:
     print("Loading without GIF-builder...")
 
 
-gk = 2
+gk = 1
 
 
 def all_of(iterable, vtype):
