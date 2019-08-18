@@ -34,7 +34,7 @@ import soda
 
 # let's create our canvas
 my_first_canvas = soda.Canvas(size=(1000, 1000), # size is a tuple/list with two elements: width and height.
-	                          color="green") # color can be either an (r, g, b) tuple, or a hex color, or even a CSS color (PIL.ImageColor)
+                              color="green") # color can be either an (r, g, b) tuple, or a hex color, or even a CSS color (PIL.ImageColor)
 
 # if one argument is given for Rectangle, soda assumes it's both width and height
 square = soda.Rectangle(500, color="#fff")
@@ -45,6 +45,8 @@ my_first_canvas.put(square, position=(250, 250))
 # then we can save our canvas and look at this ugly color scheme that we've chose (._.)
 my_first_canvas.save("super_picture.png")
 ```
+![Pretty... beautiful, obviously](http://evtn.ru/~super_picture.png "Blinking")
+
 Canvas can be rendered and saved as an image at any point of your code, and it still would be a canvas.
 At this point, it doesn't make any sense - why we need these shapes and canvas?
 The answer is simplicity. You don't have to handle some unnecessary aspects of a picture, and you can create tons of different pictures with a few lines of code.
@@ -61,7 +63,7 @@ import soda
 canvas = soda.Canvas()
 gif = soda.GIF(canvas)
 
-for frames in range(100):
+for frame in range(100):
     # some changes to canvas
     gif.add() # image=None
 gif.save() # name=None, framerate=60
@@ -79,17 +81,19 @@ squares = []
 for i in range(1600):
     squares.append(soda.Rectangle(multiplier, color="#4680c2", position=(multiplier, multiplier))) # local position - square would have an additional offset
     canvas.put(squares[-1], position=((i % 40) * multiplier,
-	                                  (i // 40) * multiplier)) # calculating the position according to the index
+                                      (i // 40) * multiplier)) # calculating the position according to the index
 
 renders = []
 
 for i in range(100):
     for j in range(len(squares)):
-        squares[j].color_set(soda.hsl()) # if there's no arguments, hsl() places random values
+        squares[j].color_set(soda.hsl()) # h=None, s=None, l=None
     gif.add()
-gif.save(framerate=30)
+gif.save(framerate=30, name="random_squares.gif")
 
 ```
+![That's how it will look](http://evtn.ru/~random_squares.gif "Blinking")
+
 ### Positioning
 You've probably seen some `position` argument before on this page. Seems intuitive, but what does this argument do in Rectangle?    
 Soda has levels of position: You can put an ellipse on canvas on (200, 200), and then set the position of this ellipse itself to (120, 90). The final position would be (320, 290)    
