@@ -185,7 +185,6 @@ class Ellipse(Shape):
         pos = get_default(pos, [0, 0])
         coords = [(self.center.x + pos.x - self.x_radius, self.center.y + pos.y - self.y_radius),
                   (self.center.x + pos.x + self.x_radius, self.center.y + pos.y + self.y_radius)]
-        print(coords, [tuple(i * gk for i in el) for el in coords])
         return [tuple(i * gk for i in el) for el in coords]
 
     def radius_set(self, x_radius, y_radius=None):
@@ -215,8 +214,8 @@ class Ellipse(Shape):
 
 # center, x_radius[, y_radius, color, start, stop]
 class Pieslice(Ellipse):
-    def __init__(self, center, xrad, yrad=None, color=(0, 0, 0, 255), start=0, stop=360):
-        super().__init__(center, xrad, yrad, color)
+    def __init__(self, center, x_radius, y_radius=None, color=(0, 0, 0, 255), start=0, stop=360):
+        super().__init__(center, x_radius, y_radius, color)
         self.start_set(start)
         self.stop_set(stop)
 
