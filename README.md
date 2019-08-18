@@ -44,8 +44,9 @@ my_first_canvas.put(square, position=(250, 250))
 
 # then we can save our canvas and look at this ugly color scheme that we've chose (._.)
 my_first_canvas.save("super_picture.png")
-```
-![Super Cool Picture](http://evtn.ru/~super_picture.png "Pretty... beautiful, obviously")
+```    
+![Oops, no picture](http://evtn.ru/~super_picture.png)    
+*Remember, kids, 'green' is the worst choice.*
 
 Canvas can be rendered and saved as an image at any point of your code, and it still would be a canvas.
 At this point, it doesn't make any sense - why we need these shapes and canvas?
@@ -75,7 +76,7 @@ import soda
 multiplier = 5
 # let's create our canvas again
 canvas = soda.Canvas(size=(42 * multiplier, 42 * multiplier),
-                     color="#fff") # no more green, okay?
+                     color="#fff")
 gif = soda.GIF(canvas)
 squares = []
 for i in range(1600):
@@ -91,8 +92,9 @@ for i in range(100):
     gif.add()
 gif.save(framerate=30, name="random_squares.gif")
 
-```
-![That's how it will look](http://evtn.ru/~random_squares.gif "Blinking")
+```    
+![Oops, no picture](http://evtn.ru/~random_squares.gif)    
+*Blinking*
 
 ### Positioning
 You've probably seen some `position` argument before on this page. Seems intuitive, but what does this argument do in Rectangle?    
@@ -238,6 +240,25 @@ Soda has 6 types of unique built-in shapes.
 ### Polygon    
 *The most popular shape in AppStore.*    
 
+```python
+import soda
+import math  # let's do some fancy math
+
+radiuses = [150 / 3 ** 0.5, 150]
+dots = [(math.cos(angle * math.pi / 6) * radiuses[angle % 2],
+         math.sin(angle * math.pi / 6) * radiuses[angle % 2]) for angle in range(12)]
+
+canvas = soda.Canvas(size=(500, 500),
+                     color="#121212")
+poly = soda.Polygon(dots=dots, 
+                    color=soda.hsl(s=82, l=62))
+canvas.put(poly, 
+           position=(250, 250))
+canvas.save("poly.png")
+```    
+![Oops, no picture](http://evtn.ru/~poly.png)    
+*oh my stars*
+
 Polygon constructor takes two arguments:    
 + `dots` - tuple/list of dot-like objects.    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
@@ -249,6 +270,16 @@ Takes a position and returns a list of dots according to this position
 
 #### Rectangle    
 *So straight*    
+
+```python
+import soda
+canvas = soda.Canvas(size=(500, 500), color="#121212")
+rect = soda.Rectangle(width=300, height=200, color=soda.hsl(s=82, l=62), position=(100, 150))
+canvas.put(rect)
+canvas.save("rect.png")
+```    
+![Oops, no picture](http://evtn.ru/~rect.png)    
+*Take a rect*
 
 Rectangle constructor takes four arguments:    
 + `width` - width of the rectangle in pixels    
@@ -265,6 +296,16 @@ Changes the size of rectangle
 ### Ellipse
 *The guy who is just fooling a**round***.    
 
+```python
+import soda
+canvas = soda.Canvas(size=(500, 500), color="#121212")
+circ = soda.Ellipse(center=(250, 250), x_radius=150, color=soda.hsl(s=82, l=62))
+canvas.put(circ)
+canvas.save("circ.png")
+```    
+![Oops, no picture](http://evtn.ru/~circ.png)    
+*Actually, there is antialiasing in soda, but it's very buggy so it's disabled by default*
+
 Ellipse constructor takes four arguments:    
 + `center` - dot-like object that defines a center of ellipse    
 + `x_radius` - horizontal radius of ellipse    
@@ -280,6 +321,16 @@ Takes a position and returns a two corners according to this position
 #### Pieslice
 *A little Pacman for free.*    
 
+```python
+import soda
+canvas = soda.Canvas(size=(500, 500), color="#121212")
+pies = soda.Pieslice(center=(250, 250), x_radius=150, color=soda.hsl(s=82, l=62), start=45, stop=-45)
+canvas.put(pies)
+canvas.save("pies.png")
+```    
+![Oops, no picture](http://evtn.ru/~pies.png)    
+*Circle is just a fancy pieslice*
+
 Pieslice constructor takes four arguments:    
 + `center` - dot-like object that defines a center of ellipse.    
 + `x_radius` - horizontal radius of ellipse.    
@@ -293,6 +344,17 @@ It shares methods with Ellipse and Shape. Also, it has methods `start_set(start)
 
 ### Text
 *A simple way to write "Hello World" on your first image*
+
+```python
+import soda
+canvas = soda.Canvas(size=(500, 500), color="#121212")
+font_path = "/path/to/my/font.ttf"
+text = soda.Text("soda", font=font_path, size=150, align="cc", color=soda.hsl(s=82, l=62))
+canvas.put(text, position=(250, 250))
+canvas.save("text.png")
+```    
+![Oops, no picture](http://evtn.ru/~text.png)    
+*The font is called TT Commons if you're curious*
 
 Text constructor takes six arguments:
 + `text` - a string itself.
@@ -326,7 +388,17 @@ In example, default "cs" centers text horizontally and pins its top to the verti
 ### MaskShape
 *He was a boring gray mask, but became a colored shape*    
 
-MaskShape is a shape defined by a lightness mask. Black pixels of mask are transparent, and white pixels are solid. Pretty simple.    
+```python
+import soda
+canvas = soda.Canvas(size=(500, 500), color="#121212")
+mask = soda.MaskShape(mask="mask_pic.png", color=soda.hsl(s=82, l=62), position=(100, 100))
+canvas.put(mask)
+canvas.save("mask.png")
+```    
+![Oops, no picture](http://evtn.ru/~mask.png)    
+*Another picture of UFO*
+
+MaskShape is a shape defined by a lightness mask. Black pixels of mask are transparent, and white pixels are "solid". Pretty simple.    
 
 MaskShape constructor takes four arguments:    
 + `mask` - the mask itself (check [Image notation](#image-notation))    
@@ -343,7 +415,7 @@ Returns current mask of the shape.
 (*returns: PIL.Image.Image object of the mask*)
 
 ____
-This part is still not documented. You might wait a few ~~days~~ weeks.    
+This part is still not documented. You might wait a few ~~days~~ ~~weeks~~ years.    
 
 
 ### FitBox
