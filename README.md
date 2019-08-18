@@ -45,7 +45,7 @@ my_first_canvas.put(square, position=(250, 250))
 # then we can save our canvas and look at this ugly color scheme that we've chose (._.)
 my_first_canvas.save("super_picture.png")
 ```
-![Pretty... beautiful, obviously](http://evtn.ru/~super_picture.png "Blinking")
+![Super Cool Picture](http://evtn.ru/~super_picture.png "Pretty... beautiful, obviously")
 
 Canvas can be rendered and saved as an image at any point of your code, and it still would be a canvas.
 At this point, it doesn't make any sense - why we need these shapes and canvas?
@@ -75,7 +75,7 @@ import soda
 multiplier = 5
 # let's create our canvas again
 canvas = soda.Canvas(size=(42 * multiplier, 42 * multiplier),
-	                 color="#fff") # no more green, okay?
+                     color="#fff") # no more green, okay?
 gif = soda.GIF(canvas)
 squares = []
 for i in range(1600):
