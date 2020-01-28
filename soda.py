@@ -19,14 +19,18 @@ def get_default(to_check, default):
 
 
 def hsl(h=None, s=None, l=None):
-    h = (h, h) if type(h) in [int, float] else (0, 360) if h is None else h
-    s = (s, s) if type(s) in [int, float] else (0, 100) if s is None else s
+    args = [h, s, l]
+    argsmax = [360, 100, 100]
     l = (l, l) if type(l) in [int, float] else (0, 100) if l is None else l
     h = random.randint(*[int(x) for x in h]) % 361
     s = random.randint(*[int(x) for x in s]) % 101
     l = random.randint(*[int(x) for x in l]) % 101
     return Color.parse("hsl({}, {}%, {}%)".format(h, s, l))
 
+    def getval(x, maxx):
+        if type(x) in [int, float]:
+            return x
+        return random.randint(*[int(x) for x in (x or [0, maxx])]) % (maxx + 1)
 
 def fit(box_size, shape_size):
     return min([box_size[0] / shape_size[0], box_size[1] / shape_size[1]])
