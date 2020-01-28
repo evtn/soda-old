@@ -541,3 +541,21 @@ def random_dot(canvas):
     )
 
 
+
+def connect(names, force=False):
+    results = {}
+    if type(names) == str:
+        names = names.replace(" ", "").split(",")
+    for name in names:
+        name_ = script_path + "soda-{}.py".format(name)
+        if name in modules and not force:
+            result = 0
+        elif exists(name_):
+            if name in modules:
+                modules.remove(name)
+            with open(name_, 'rb') as file:
+                exec(compile(file.read(), name_, 'exec'), globals())
+            result = 1
+            modules.append(name)
+        else:
+            result = -1
