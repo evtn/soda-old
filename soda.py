@@ -12,25 +12,24 @@ except ImportError:
 script_path = path.dirname(path.abspath(__file__)) + "/"
 modules = []
 
-gk = 1
+class Utils:
+    @staticmethod
+    def all_of(iterable, vtype):
+        iterator = range(len(iterable)) if type(iterable) in [list, tuple] else iterable
+        return not any(not isinstance(iterable[elem], vtype) for elem in iterator)
 
+    @staticmethod
+    def default(passed, default):
+        return default if passed is None else passed
 
-def all_of(iterable, vtype):
-    return not any(not isinstance(iterable[i], vtype) for i in (range(len(iterable)) if type(iterable) in [list, tuple] else iterable))
-
-
-def get_default(to_check, default):
-    return default if to_check is None else to_check
+    @staticmethod
+    def deg_to_rad(angle):
+        return angle * pi / 180
 
 
 def hsl(h=None, s=None, l=None):
     args = [h, s, l]
     argsmax = [360, 100, 100]
-    l = (l, l) if type(l) in [int, float] else (0, 100) if l is None else l
-    h = random.randint(*[int(x) for x in h]) % 361
-    s = random.randint(*[int(x) for x in s]) % 101
-    l = random.randint(*[int(x) for x in l]) % 101
-    return Color.parse("hsl({}, {}%, {}%)".format(h, s, l))
 
     def getval(x, maxx):
         if type(x) in [int, float]:
