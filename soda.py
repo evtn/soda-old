@@ -1,11 +1,16 @@
-from PIL import ImageColor, ImageFont, Image, ImageDraw
+from PIL import ImageColor, ImageFont, Image as PImage, ImageDraw
 import random
 import io
+from math import sin, cos, pi
+from os import path
+exists = path.exists
 try:
     import imageio
 except ImportError:
     print("Loading without GIF-builder...")
 
+script_path = path.dirname(path.abspath(__file__)) + "/"
+modules = []
 
 gk = 1
 
@@ -37,10 +42,10 @@ def fit(box_size, shape_size):
 
 
 def mask_resize(shape, mask):
-    mask_ = Image.new("L", shape.size)
+    mask_ = PImage.new("L", shape.size)
     k = fit(shape.size, mask.size)
     mask = mask.resize(
-        (int(mask.size[0] * k), int(mask.size[1] * k)), resample=Image.LANCZOS)
+        (int(mask.size[0] * k), int(mask.size[1] * k)), resample=PImage.LANCZOS)
     m_position = [0, 0]
     for i in range(2):
         if mask.size[i] != shape.size[i]:
@@ -345,8 +350,8 @@ class SodaImage(Shape):
         if isinstance(image, SodaImage):
             self.image = image.image
         elif isinstance(image, str):
-            self.image = Image.open(image)
-        elif isinstance(image, Image.Image):
+            self.image = PImage.open(image)
+        elif isinstance(image, PImage.Image):
             self.image = image.copy()
         elif isinstance(image, Canvas):
             self.image = image
@@ -358,7 +363,7 @@ class SodaImage(Shape):
 
     def resized(self, k, image=None, fitbox=True):
         image = image or self.get(orig=True)
-        res = image.resize(tuple(int(image.size[i] * k) for i in range(2)), resample=Image.LANCZOS)
+        res = image.resize(tuple(int(image.size[i] * k) for i in range(2)), resample=PImage.LANCZOS)
         if fitbox:
             return SodaImage(res)
         return res
@@ -492,9 +497,9 @@ class Canvas:
 
     def render(self):
         if self.background is None:
-            image = Image.new(self.mode, tuple([size * gk for size in self.size]), self.color.color)
+            image = PImage.new(self.mode, tuple(self.size), self.color.color)
         else:
-            image = SodaImage(self.background).get()
+            image = PImage.new(self.mode, tuple(self.background.size), self.color.color)
             image = image.resize(tuple(s * gk for s in image.size))
         self.size = image.size
         draw = ImageDraw.Draw(image)
