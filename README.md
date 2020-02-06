@@ -1,7 +1,5 @@
 # soda
 
-This package (and README) isn't maintained anymore. I'm working on a new project: [aera](https://github.com/evtn/aera)
-
 ## Contents
 + [Quickstart](#quickstart)
     + [Requirements](#requirements)
