@@ -27,6 +27,10 @@ class Utils:
         return angle * pi / 180
 
 
+def fit(box_size, shape_size):
+    return min([box_size[0] / shape_size[0], box_size[1] / shape_size[1]])
+
+
 def hsl(h=None, s=None, l=None):
     args = [h, s, l]
     argsmax = [360, 100, 100]
