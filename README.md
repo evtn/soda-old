@@ -1,5 +1,7 @@
 # soda
 
+This README file will be updated as soda2.0 approaches.
+
 ## Contents
 + [Quickstart](#quickstart)
     + [Requirements](#requirements)
@@ -11,7 +13,7 @@
     + [Canvas](#canvas)
     + [Shape](#shape)
     + [Color](#color)
-    + [Dot](#dot)
+    + [Point](#point)
     + [Template](#template)
 + [Built-in Shapes](#built-in-shapes)
     + [Polygon](#polygon)
@@ -106,10 +108,10 @@ ____
 ## Reference
 
 ### Objects system
-There are 4 main object types:
+There are 5 main object types:
 + Canvas
 + Shape
-+ Dot
++ Point
 + Color
 + Template
 
@@ -144,7 +146,7 @@ Saves an image of the canvas, equivalent to `.render().save(file, extension)`
 *returns: None*    
 
 `corners_get() and get_center()`    
-*returns: list of Dot, containing corners of the canvas*; *returns: Dot of canvas center*    
+*returns: list of Point, containing corners of the canvas*; *returns: Point of canvas center*    
 
 ____
 
@@ -206,16 +208,16 @@ Accepts:
 
 ____
 
-### Dot    
-Defines an abstract dot on any canvas.   
-*dot-like object* is a tuple or list of 2 integers, or the Dot itself.
+### Point    
+Defines an abstract point on any canvas.   
+*point-like object* is a tuple or list of 2 integers, or the Point itself.
 
 #### Arguments    
-`x, y` - dot position    
+`x, y` - point position    
 
 #### Methods    
 `move(x=None, y=None)`    
-Moves a dot to another position. If some parameter isn't specified, it would stay the same.    
+Moves a point to another position. If some parameter isn't specified, it would stay the same.    
 
 ____
 
@@ -236,7 +238,7 @@ Priority of arguments (from high to low): params - default params - args.
 ____
 
 ## Built-in Shapes
-Soda has 6 types of unique built-in shapes.    
+Soda has a few types of unique built-in shapes.    
 
 ### Polygon    
 *The most popular shape in AppStore.*    
@@ -246,12 +248,12 @@ import soda
 import math  # let's do some fancy math
 
 radiuses = [150 / 3 ** 0.5, 150]
-dots = [(math.cos(angle * math.pi / 6) * radiuses[angle % 2],
+points = [(math.cos(angle * math.pi / 6) * radiuses[angle % 2],
          math.sin(angle * math.pi / 6) * radiuses[angle % 2]) for angle in range(12)]
 
 canvas = soda.Canvas(size=(500, 500),
                      color="#121212")
-poly = soda.Polygon(dots=dots, 
+poly = soda.Polygon(points=points, 
                     color=soda.hsl(s=82, l=62))
 canvas.put(poly, 
            position=(250, 250))
@@ -261,13 +263,13 @@ canvas.save("poly.png")
 *oh my stars*
 
 Polygon constructor takes two arguments:    
-+ `dots` - tuple/list of dot-like objects.    
++ `points` - tuple/list of point-like objects.    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
 
 **Specific methods**:    
 `to_list(pos)`    
-Takes a position and returns a list of dots according to this position    
-(*returns: list of dot-like lists*)    
+Takes a position and returns a list of points according to this position    
+(*returns: list of point-like lists*)    
 
 #### Rectangle    
 *So straight*    
@@ -286,7 +288,7 @@ Rectangle constructor takes four arguments:
 + `width` - width of the rectangle in pixels    
 + `height` - height in pixels. *default: passed width*    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
-+ `position` - dot-like object. *default: (0, 0)*    
++ `position` - point-like object. *default: (0, 0)*    
 
 **Specific methods**:    
 `size_set(width, height=None)`    
@@ -308,7 +310,7 @@ canvas.save("circ.png")
 *Actually, there is antialiasing in soda, but it's very buggy so it's disabled by default*
 
 Ellipse constructor takes four arguments:    
-+ `center` - dot-like object that defines a center of ellipse    
++ `center` - point-like object that defines a center of ellipse    
 + `x_radius` - horizontal radius of ellipse    
 + `y_radius` - vertical radius of ellipse. *default: passed x_radius*    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
@@ -317,7 +319,7 @@ Ellipse has two specific methods:
 **Specific methods**:    
 `to_list(pos)`    
 Takes a position and returns a two corners according to this position    
-(*returns: list of dot-like lists*)    
+(*returns: list of point-like lists*)    
 
 #### Pieslice
 *A little Pacman for free.*    
@@ -333,7 +335,7 @@ canvas.save("pies.png")
 *Circle is just a fancy pieslice*
 
 Pieslice constructor takes four arguments:    
-+ `center` - dot-like object that defines a center of ellipse.    
++ `center` - point-like object that defines a center of ellipse.    
 + `x_radius` - horizontal radius of ellipse.    
 + `y_radius` - vertical radius of ellipse. *default: passed x_radius*    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
@@ -361,7 +363,7 @@ Text constructor takes six arguments:
 + `text` - a string itself.
 + `font` - path of the font file you want to use
 + `size` - size in px
-+ `position` - dot-like object that defines position. *default: (0, 0)*    
++ `position` - point-like object that defines position. *default: (0, 0)*    
 + `align` - string that defines align mode (more in *Align* section below). *default: "cs"*    
 + `color` - see [Color notation](#parse-method). *default: "black"*    
   
@@ -375,8 +377,8 @@ Changes size
 (*returns: None*)    
 
 `corners_get(position=(0, 0))`    
-Returns a list of dots considering align and specified position
-(*returns: list of dot-like lists*)    
+Returns a list of points considering align and specified position
+(*returns: list of point-like lists*)    
 
 #### Align
 align is a string of two chars (first is horizontal align, second is vertical):
@@ -404,7 +406,7 @@ MaskShape is a shape defined by a lightness mask. Black pixels of mask are trans
 MaskShape constructor takes four arguments:    
 + `mask` - the mask itself (check [Image notation](#image-notation))    
 + `color` - color of the shape (check [Color notation](#parse-method))    
-+ `position` - dot-like object that defines position. *default: (0, 0)*    
++ `position` - point-like object that defines position. *default: (0, 0)*    
 + `size` - size to fit the shape in. If not specified, the shape would be at the size of original image *default: None*    
 
 **Specific methods**:    
