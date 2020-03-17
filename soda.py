@@ -1,4 +1,4 @@
-from PIL import ImageColor, ImageFont, Image as PImage, ImageDraw
+from PIL import ImageColor, ImageFont, Image as PImage, ImageDraw, ImageFilter
 import random
 import io
 from math import sin, cos, pi
@@ -64,34 +64,6 @@ def get_point(pointy):
         return Point(*pointy)
 
 
-class Point:
-    def __init__(self, x, y):
-        self.x = self.y = 0
-        self.move(x, y)
-
-    def move(self, x=None, y=None):
-        self.x = Utils.default(x, self.x)
-        self.y = Utils.default(y, self.y)
-
-    def __str__(self):
-        return "soda.Point({}, {})".format(self.x, self.y)
-
-    def __getitem__(self, item):
-        return self.x if not item else self.y
-
-    def __sub__(self, other):
-        return Point(self.x - other.x, self.y - other.y)
-
-    def __abs__(self):
-        return (self.x ** 2 + self.y ** 2) ** 0.5
-
-    def rotate(self, center, angle):
-        angle = Utils.deg_to_rad(angle)
-        x = cos(angle) * (self.x - center.x) - sin(angle) * (self.y - center.y) + center.x
-        y = sin(angle) * (self.x - center.x) + cos(angle) * (self.y - center.y) + center.y
-        return Point(x, y)
-
-
 class Color:
     def __init__(self, color):
         self.change(color)
@@ -129,6 +101,8 @@ class Color:
 
 class Shape:
     draw_type = "shape"
+    color = None
+
     def color_set(self, color):
         if isinstance(color, Color):
             self.color = color
@@ -136,13 +110,13 @@ class Shape:
             self.color = Color(color)
 
     def color_get(self):
-        return self.color.color
+        return (self.color or Color("red")).color
 
     # next methods must be implemented in any shape
 
     def box_get(self):
-        # returns left upper and right bottom corners of shape's bounding box: [(x1, y1), (x2, y2)]
-        return [(0, 0), (1, 1)]
+        # returns size of shape's bounding box: (width, height)
+        return (0, 1)
 
     def render(self, draw, position):
         # renders shape on the canvas
@@ -150,11 +124,47 @@ class Shape:
 
     def __str__(self):
         # returns a string providing formal info on the shape
-        return "Some soda.Shape"
+        return "soda." + self.__class__.__name__ + "() object"
 
     def resized(self, k):
         # returns a k times bigger shape
-        return self.__class__()
+        return self
+
+
+class Point(Shape):
+    draw_type = "image"
+
+    def __init__(self, x, y):
+        self.x = self.y = 0
+        self.move(x, y)
+
+    def move(self, x=None, y=None):
+        self.x = Utils.default(x, self.x)
+        self.y = Utils.default(y, self.y)
+
+    def __str__(self):
+        return "soda.Point({}, {})".format(self.x, self.y)
+
+    def __getitem__(self, item):
+        return [self.x, self.y][item]
+
+    def __add__(self, other):
+        return Point(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other):
+        return Point(self.x - other.x, self.y - other.y)
+
+    def __abs__(self):
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+    def render(self, draw, position):
+        draw.putpixel(*position, color=self.color_get())
+
+    def rotate(self, center, angle):
+        angle = Utils.deg_to_rad(angle)
+        x = cos(angle) * (self.x - center.x) - sin(angle) * (self.y - center.y) + center.x
+        y = sin(angle) * (self.x - center.x) + cos(angle) * (self.y - center.y) + center.y
+        return Point(x, y)
 
 
 # points[, color]
@@ -207,6 +217,9 @@ class RoundRect(Polygon):
                 self.radius[corner] = self.size[corner % 2] * k
                 self.radius[(corner + 1) % 4] = self.size[corner % 2] * (1 - k)
 
+    def box_get(self):
+        return self.construct()[-1].box_get()
+
     def construct(self):
         self.radius_limiter()
         shapes = []
@@ -252,8 +265,7 @@ class Ellipse(Shape):
         draw.ellipse(self.to_list(position), fill=self.color_get())
 
     def box_get(self):
-        return [(self.center.x - self.x_radius, self.center.y + self.y_radius * 2),
-                (self.center.x +- self.x_radius, self.center.y - self.y_radius * 2)]
+        return (self.x_radius * 2, self.y_radius * 2)
 
     def __str__(self):
         if self.x_radius == self.y_radius:
@@ -395,14 +407,20 @@ class SodaImage(Shape):
         return image.convert(mode)
 
     def set(self, image):
-        if isinstance(image, SodaImage):
+        its = lambda x: isinstance(image, x)
+        if its(SodaImage):
             self.image = image.image
-        elif isinstance(image, str):
+        elif its(str):
             self.image = PImage.open(image)
-        elif isinstance(image, PImage.Image):
+        elif its(PImage.Image):
             self.image = image.copy()
-        elif isinstance(image, Canvas):
+        elif its(Canvas):
             self.image = image
+        elif its(bytes):
+            bio = io.BytesIO()
+            bio.write(image)
+            bio.seek(0)
+            self.image = PImage.open(bio)
         else:
             raise TypeError("invalid image")
         if self.size is None:
@@ -410,7 +428,7 @@ class SodaImage(Shape):
         self.size = tuple(self.size)
 
     def resized(self, k, image=None, fitbox=True):
-        image = image or self.get(orig=True)
+        image = image or self.get()
         res = image.resize(tuple(int(image.size[i] * k) for i in range(2)), resample=PImage.LANCZOS)
         if fitbox:
             return SodaImage(res)
@@ -435,10 +453,12 @@ class SodaImage(Shape):
         offset = [(image.size[i] - size[i]) // 2 for i in range(2)]
         return image.crop(offset + [size[i] + offset[i] for i in range(2)])
 
-
     def square_get(self, size=None):
         return self.crop(Utils.default(size, min(self.size)))
 
+    def box_get(self):
+        return self.get().size
+        
 
 # o_class, arg_names, **params
 class Template:
@@ -581,6 +601,12 @@ class Canvas:
     @property
     def gif(self):
         return GIF(self)
+
+    def to_bytes(self, extension="png"):
+        bio = io.BytesIO()
+        self.save(bio, extension)
+        bio.seek(0)
+        return bio.read()
     
 
 class GIF:
