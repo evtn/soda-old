@@ -515,13 +515,16 @@ class Rectangle(Polygon):
 
 # shape, box[, position]
 class FitBox(Shape):
-    def __init__(self, shape: Shape, box, position=Point(0, 0)):
+    draw_type = "image"
+
+    def __init__(self, shape: Shape, box, position=(0, 0), align="ss"):
         self.debug = False
         self.initial = shape
         self.position = get_point(position)
         self.color_set("red")
+        self.align = align
         if type(box) in (tuple, list):
-            is_int = sum(isinstance(box[i], int) for i in range(len(box)))
+            is_int = all(type(box[i]) in [float, int] for i in range(len(box)))
             if is_int:
                 if len(box) == 1:
                     self.box = box[0], box[0]
@@ -538,14 +541,20 @@ class FitBox(Shape):
 
     def render(self, draw, position):
         shape = self.shape_get()
+        draw_ = ImageDraw.Draw(draw)
         position = Point(position.x + self.position.x, position.y + self.position.y)
         if self.debug:
             if type(self.initial) == Text:
                 shape.text = "{}x{}".format(*self.box)
-            draw.rectangle(((position.x, position.y), (position.x + self.box[0], position.y + self.box[1])),
-                           fill=self.color_get())
+            Rectangle(*self.box, color=self.color).render(draw_, position)
 
-        shape.render(draw, position)
+        if self.align != "ss":
+            shape_size = shape.box_get()
+            for axis in range(2):
+                aligns = {"s": 0, "c": 1, "e": 2}
+                position += Point(*[aligns[self.align[axis]] * (self.box[axis] - shape_size[axis]) // 2, 0][::(-1) ** axis])
+
+        shape.render(Utils.draw_get(shape, [draw, draw_]), position)
 
     def resized(self, k):
         return FitBox(self.initial, tuple(self.box[i] // k for i in range(len(self.box))))
