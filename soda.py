@@ -26,6 +26,10 @@ class Utils:
     def deg_to_rad(angle):
         return angle * pi / 180
 
+    @staticmethod
+    def draw_get(shape, draws):
+        return draws[shape.draw_type == "shape"]
+
 
 def fit(box_size, shape_size):
     return min([box_size[0] / shape_size[0], box_size[1] / shape_size[1]])
