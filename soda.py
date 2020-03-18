@@ -235,6 +235,9 @@ class RoundRect(Polygon):
     def box_get(self):
         return self.construct()[-1].box_get()
 
+    def resized(self, k):
+        return RoundRect(*[s * k for s in self.size], [r * k for r in self.radius], self.color, self.position)
+
     def construct(self):
         self.radius_limiter()
         shapes = []
@@ -348,12 +351,8 @@ class Text(Shape):
         size = self.box_get()
         corner = [0, 0]
         for i in range(2):
-            if self.align[i] == "c":
-                corner[i] = position[i] - (size[i] // 2)
-            elif self.align[i] == "s":
-                corner[i] = position[i]
-            elif self.align[i] == "e":
-                corner[i] = position[i] - size[i]
+            types = {"s": 0, "c": 1, "e": 2}
+            corner[i] = position[i] - (types[self.align[i]] * size[i] // 2)
         return [corner, [corner[0] + size[0], corner[1] + size[1]]]
 
     def box_get(self):
@@ -502,7 +501,7 @@ class Rectangle(Polygon):
     def __init__(self, width, height=None, color=(0, 0, 0, 255), position=(0, 0)):
         height = Utils.default(height, width)
         points = [Point(position[0] + width * (i in [1, 2]),
-                    position[1] + height * (i > 1)) for i in range(4)]
+                        position[1] + height * (i > 1)) for i in range(4)]
         super().__init__(points, color)
 
     def size_set(self, width, height=None):
