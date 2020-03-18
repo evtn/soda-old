@@ -134,7 +134,7 @@ class Shape:
 class Point(Shape):
     draw_type = "image"
 
-    def __init__(self, x, y):
+    def __init__(self, x=None, y=None):
         self.x = self.y = 0
         self.move(x, y)
 
@@ -157,8 +157,19 @@ class Point(Shape):
     def __abs__(self):
         return (self.x ** 2 + self.y ** 2) ** 0.5
 
+    def __mul__(self, other):
+        if type(other) == Point:
+            return Point(self.x * other.x, self.y * other.y)
+        return Point(self.x * other, self.y * other)
+
+    def box_get(self):
+        return (1, 1)
+
+    def resized(self, k):
+        return Point(*self)
+
     def render(self, draw, position):
-        draw.putpixel(*position, color=self.color_get())
+        draw.putpixel(*[round(position[i] + self[i]) for i in range(2)], color=self.color_get())
 
     def rotate(self, center, angle):
         angle = Utils.deg_to_rad(angle)
