@@ -317,7 +317,7 @@ class Pieslice(Ellipse):
 
 # text, font, size[, position, align, color]
 class Text(Shape):
-    def __init__(self, text, font, size=1000, position=Point(0, 0), align="cs", color=(0, 0, 0, 255)):
+    def __init__(self, text, font, size=1000, position=(0, 0), align="cs", color=(0, 0, 0, 255)):
         self.text = text
         self.font_set(font, size)
         self.color_set(color)
@@ -586,7 +586,7 @@ class Canvas:
         draw = ImageDraw.Draw(image)
         objects = self.objects
         if self.background:
-            objects = [{"object": SodaImage(self.background), "position": Point(0, 0)}] + objects
+            objects = [{"object": SodaImage(self.background), "position": Point()}] + objects
         for obj in objects:
             d = draw if obj["object"].draw_type != "image" else image
             obj["object"].render(d, obj["position"])
